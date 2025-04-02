@@ -12,7 +12,8 @@ namespace YarpK8sProxy.Configuration
         {
             _logger = logger;
             
-            // Create static configuration
+            _logger.LogInformation("Initializing proxy configuration");
+
             var routes = new[]
             {
                 new RouteConfig
@@ -21,7 +22,40 @@ namespace YarpK8sProxy.Configuration
                     ClusterId = "test-cluster",
                     Match = new RouteMatch
                     {
-                        Path = "{**catch-all}"
+                        Path = "/test"
+                    },
+                    Transforms = new[]
+                    {
+                        new Dictionary<string, string>
+                        {
+                            { "PathRemovePrefix", "/test" }
+                        }
+                    }
+                },
+                new RouteConfig
+                {
+                    RouteId = "public-test-route",
+                    ClusterId = "test-cluster",
+                    Match = new RouteMatch
+                    {
+                        Path = "/public/test"
+                    },
+                    Transforms = new[]
+                    {
+                        new Dictionary<string, string>
+                        {
+                            { "PathRemovePrefix", "/public/test" }
+                        }
+                    }
+                },
+                // Root path route
+                new RouteConfig
+                {
+                    RouteId = "root-route",
+                    ClusterId = "test-cluster",
+                    Match = new RouteMatch
+                    {
+                        Path = "/"
                     }
                 }
             };
@@ -33,12 +67,17 @@ namespace YarpK8sProxy.Configuration
                     ClusterId = "test-cluster",
                     Destinations = new Dictionary<string, DestinationConfig>
                     {
-                        { "test-app", new DestinationConfig { Address = "http://test-app:8080/" } }
+                        { "test-app", new DestinationConfig 
+                            { 
+                                Address = "http://test-app:8080/"
+                            } 
+                        }
                     }
                 }
             };
 
             _config = new ProxyConfig(routes, clusters);
+            _logger.LogInformation("Proxy configuration initialized with routes: /, /test, and /public/test");
         }
 
         public IProxyConfig GetConfig() => _config;

@@ -35,12 +35,29 @@ metadata:
   name: yarp-proxy
 spec:
   ports:
-    - port: 80
+    - name: http
+      port: 8080
       targetPort: 8080
-      protocol: TCP
+    - name: https
+      port: 8443
+      targetPort: 8080
   selector:
     app: yarp-proxy
   type: LoadBalancer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: yarp-cert
+spec:
+  dnsNames:
+    - yarp-proxy.default.svc
+  ipAddresses:
+    - "135.18.146.190"  # Your LoadBalancer IP
+  secretName: yarp-tls
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -91,3 +108,18 @@ spec:
         image: yixiansootestappacr.azurecr.io/yarp-proxy:latest
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - name: tls
+          mountPath: "/app/certs"
+          readOnly: true
+        env:
+        - name: ASPNETCORE_URLS
+          value: "http://+:8080;https://+:8080"
+        - name: ASPNETCORE_Kestrel__Certificates__Default__Path
+          value: "/app/certs/tls.crt"
+        - name: ASPNETCORE_Kestrel__Certificates__Default__KeyPath
+          value: "/app/certs/tls.key"
+      volumes:
+      - name: tls
+        secret:
+          secretName: yarp-tls
