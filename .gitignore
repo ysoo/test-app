@@ -1,0 +1,61 @@
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.dll
+*.exe
+*.pdb
+
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.cache
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.AssemblyInfo.cs
+*.AssemblyInfoInputs.cache
+*.GlobalUsings.g.cs
+*.csproj.nuget.*
+*.assets.json
+*.dgspec.json
+
+# IDE settings
+.idea/
+*.iml
+.vscode/
+
+# OS generated files
+.DS_Store
+._*
+Thumbs.db
+
+# Environment files
+*.env
+appsettings.*.json
+!appsettings.json
+
+# Docker
+.docker/
+.dockerignore
+
+# Logs
+*.log
+
+# Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NuGet
+packages/
+*.nupkg
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# Development configuration
+dev.*.yaml
+*.dev.yaml
