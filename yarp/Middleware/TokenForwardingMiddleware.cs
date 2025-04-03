@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Web;
 
 namespace YarpK8sProxy.Middleware
@@ -21,13 +24,27 @@ namespace YarpK8sProxy.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context.User.Identity?.IsAuthenticated == true)
+            if (context.User.Identity?.IsAuthenticated == false)
             {
+                _logger.LogInformation("User is not authenticated");
+                await _next(context);
+                return;
+            }
+
+            var authResult = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            // Use the Microsoft.Identity.Web extension method GetTokenValue to extract the token.
+            var token = authResult?.Ticket?.Properties?.GetTokenValue("user_impersonation_token");
+            
+            if (!string.IsNullOrEmpty(token))
+            {
+                _logger.LogInformation("Token found in authentication ticket. Adding token to request headers.");
+                context.Request.Headers.Authorization = new StringValues($"Bearer {token}");
+            } else {
                 try
                 {
                     _logger.LogInformation("User is authenticated, attempting to get user_impersonation token");
                     // Get token with user_impersonation scope
-                    var token = await _tokenAcquisition.GetAccessTokenForUserAsync(
+                    token = await _tokenAcquisition.GetAccessTokenForUserAsync(
                         new[] { "https://management.azure.com/user_impersonation" },
                         authenticationScheme: OpenIdConnectDefaults.AuthenticationScheme);
 
@@ -53,11 +70,6 @@ namespace YarpK8sProxy.Middleware
                     return;
                 }
             }
-            else
-            {
-                _logger.LogInformation("User is not authenticated");
-            }
-
             await _next(context);
         }
     }

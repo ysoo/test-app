@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TestApp.Models;
 using TestApp.Services;
 
 namespace TestApp.Controllers
-
 {
+    [Authorize]
     public class HomeController : Controller
     {
 

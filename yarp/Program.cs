@@ -74,22 +74,6 @@ builder.Services.AddAuthentication(options =>
             context.HandleResponse();
             return Task.CompletedTask;
         },
-        // Handle token validation errors
-        OnRemoteFailure = context =>
-        {
-            Console.WriteLine($"Remote authentication failure: {context.Failure?.Message}");
-            
-            // Check if this is a consent error
-            if (context.Failure?.Message?.Contains("AADSTS65001") == true || 
-                context.Failure?.Message?.Contains("consent") == true)
-            {
-                // Redirect to a page that explains consent is required
-                context.Response.Redirect("/Home/ConsentRequired");
-                context.HandleResponse();
-            }
-            
-            return Task.CompletedTask;
-        },
         // This is the important part - handle post-authentication redirect
         OnTokenValidated = async context =>
         {
@@ -173,11 +157,9 @@ app.Use(async (context, next) =>
     }
 });
 
-// Add the middleware before UseAuthentication
-app.UseMiddleware<TokenForwardingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapReverseProxy();
+app.UseMiddleware<TokenForwardingMiddleware>();
+app.MapReverseProxy().RequireAuthorizaion();
 
 app.Run();

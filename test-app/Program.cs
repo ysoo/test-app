@@ -12,13 +12,28 @@ var builder = WebApplication.CreateBuilder(args);
 // Enable detailed JWT errors in development
 IdentityModelEventSource.ShowPII = true;
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
-    .EnableTokenAcquisitionToCallDownstreamApi()
-    .AddInMemoryTokenCaches();
+// Configure authentication to validate tokens issued for management.azure.com
+builder.Services.AddAuthentication(options =>
+{
+    // Specify that JWT bearer is used to authenticate requests
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddMicrosoftIdentityWebApp(options =>
+{
+    // Bind settings from configuration (AzureAd section)
+    builder.Configuration.GetSection("AzureAd").Bind(options);
+
+    // Override the audience to accept tokens for management.azure.com
+    options.TokenValidationParameters.ValidAudience = "https://management.azure.com";
+})
+// You can keep token acquisition if your API later calls downstream APIs
+.EnableTokenAcquisitionToCallDownstreamApi()
+.AddInMemoryTokenCaches();
 
 builder.Services.AddAuthorization(options =>
 {
+    // Add a policy that requires the "user_impersonation" scope in the token
     options.AddPolicy("RequireUserImpersonation", policy =>
         policy.RequireClaim("scp", "user_impersonation"));
 });
