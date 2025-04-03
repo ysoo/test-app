@@ -29,7 +29,11 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
             try
             {
                 var cert = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-                listenOptions.UseHttps(cert);
+                listenOptions.UseHttps(cert, httpsOptions => 
+                {
+                    httpsOptions.ServerCertificate = cert;
+                    httpsOptions.AllowAnyClientCertificate();
+                });
                 var logger = serverOptions.ApplicationServices.GetRequiredService<ILogger<Program>>();
                 logger.LogInformation("HTTPS configured successfully on port 8443");
             }
