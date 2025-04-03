@@ -11,7 +11,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add HTTPS configuration
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
+    // Configure HTTP endpoint
     serverOptions.ListenAnyIP(8080, listenOptions =>
+    {
+        var logger = serverOptions.ApplicationServices.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Configuring HTTP endpoint on port 8080");
+    });
+
+    // Configure HTTPS endpoint on the same port
+    serverOptions.ListenAnyIP(8443, listenOptions =>
     {
         var certPath = Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__Path");
         var keyPath = Environment.GetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__KeyPath");
@@ -23,18 +31,13 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
                 var cert = X509Certificate2.CreateFromPemFile(certPath, keyPath);
                 listenOptions.UseHttps(cert);
                 var logger = serverOptions.ApplicationServices.GetRequiredService<ILogger<Program>>();
-                logger.LogInformation("HTTPS configured successfully");
+                logger.LogInformation("HTTPS configured successfully on port 8443");
             }
             catch (Exception ex)
             {
                 var logger = serverOptions.ApplicationServices.GetRequiredService<ILogger<Program>>();
                 logger.LogError(ex, "Failed to load certificate");
             }
-        }
-        else
-        {
-            var logger = serverOptions.ApplicationServices.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("No certificate found, using HTTP");
         }
     });
 });
@@ -59,7 +62,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Register our provider as the IProxyConfigProvider
+// Register our provider
 builder.Services.AddSingleton<IProxyConfigProvider, K8sProxyConfigProvider>();
 
 // Add the reverse proxy
