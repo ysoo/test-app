@@ -1,0 +1,32 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">Error</h1>
+<h2 class="text-danger">An error occurred while processing your request.</h2>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        <p>
+            <strong>Error details:</strong> @Model.ErrorMessage
+        </p>
+    </div>
+}
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<h3>What to do next?</h3>
+<p>
+    <ul>
+        <li>Try <a asp-controller="Home" asp-action="Index">returning to the home page</a></li>
+        <li>If you see an error about permissions or consent, try <a asp-controller="Home" asp-action="RequestConsent">granting permissions again</a></li>
+        <li>Contact your administrator if the problem persists</li>
+    </ul>
+</p>

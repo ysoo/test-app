@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "Consent Required";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Azure Permissions Required</h1>
+    <p class="lead">This application needs your permission to manage Azure resources on your behalf.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5>Consent Required</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    To update tags on Azure resources, this application needs permission to:
+                </p>
+                <ul>
+                    <li>Access Azure resources on your behalf</li>
+                    <li>Read and update resource properties</li>
+                </ul>
+                <p>
+                    These permissions allow the application to view and modify tags on resources you have access to.
+                    The application will only perform the actions you explicitly request.
+                </p>
+                <hr />
+                <div class="text-center">
+                    <a asp-action="RequestConsent" class="btn btn-primary btn-lg">Grant Permission</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

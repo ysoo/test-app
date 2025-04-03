@@ -1,0 +1,60 @@
+﻿@model ResourceTagUpdateModel
+@{
+    ViewData["Title"] = "Azure Resource Tagger";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Azure Resource Tagger</h1>
+    <p>Update tags on your Azure resources</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+        {
+            <div class="alert alert-success">
+                @ViewBag.SuccessMessage
+            </div>
+        }
+        
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @ViewBag.ErrorMessage
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Update Resource Tags</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Index" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="form-group mb-3">
+                        <label asp-for="ResourceId" class="control-label"></label>
+                        <input asp-for="ResourceId" class="form-control" placeholder="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{provider}/{resourceType}/{resourceName}" />
+                        <span asp-validation-for="ResourceId" class="text-danger"></span>
+                        <small class="form-text text-muted">Example: /subscriptions/12345678-1234-1234-1234-1234567890ab/resourceGroups/myResourceGroup/providers/Microsoft.Web/sites/myWebApp</small>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label asp-for="TagsInput" class="control-label"></label>
+                        <textarea asp-for="TagsInput" class="form-control" rows="8" placeholder="environment=production&#10;owner=devops&#10;costCenter=12345"></textarea>
+                        <span asp-validation-for="TagsInput" class="text-danger"></span>
+                        <small class="form-text text-muted">Enter tags in key=value format, one per line</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Update Tags</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
