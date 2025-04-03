@@ -40,7 +40,7 @@ spec:
       targetPort: 8080
     - name: https
       port: 8443
-      targetPort: 8080
+      targetPort: 8443
   selector:
     app: yarp-proxy
   type: LoadBalancer
@@ -108,13 +108,14 @@ spec:
         image: yixiansootestappacr.azurecr.io/yarp-proxy:latest
         ports:
         - containerPort: 8080
+        - containerPort: 8443
         volumeMounts:
         - name: tls
           mountPath: "/app/certs"
           readOnly: true
         env:
         - name: ASPNETCORE_URLS
-          value: "http://+:8080;https://+:8080"
+          value: "http://+:8080;https://+:8443"
         - name: ASPNETCORE_Kestrel__Certificates__Default__Path
           value: "/app/certs/tls.crt"
         - name: ASPNETCORE_Kestrel__Certificates__Default__KeyPath
