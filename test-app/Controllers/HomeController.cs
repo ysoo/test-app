@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TestApp.Models;
 using TestApp.Services;
 
 namespace TestApp.Controllers
@@ -17,7 +18,11 @@ namespace TestApp.Controllers
 
         public IActionResult Index()
         {
-        return View();
+            return View(new ResourceTagUpdateModel()
+            {
+                ResourceId = "resourceid",
+                TagsInput = ""
+            });
         }
 
         [HttpPost]

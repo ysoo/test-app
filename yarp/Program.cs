@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
-using Microsoft.Extensions.Logging;
 using Yarp.ReverseProxy.Configuration;
 using YarpK8sProxy.Configuration;
 using System.Security.Cryptography.X509Certificates;
+using YarpK8sProxy.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,16 +91,25 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         },
         // This is the important part - handle post-authentication redirect
-        OnTokenValidated = context =>
+        OnTokenValidated = async context =>
         {
-            // If we have a redirect stored, use it
-            if (context.Properties.RedirectUri != null && 
-                !context.Properties.RedirectUri.EndsWith("/signin-oidc"))
+            var tokenAcquisition = context.HttpContext.RequestServices
+                .GetRequiredService<ITokenAcquisition>();
+             try
             {
-                // Keep the redirect URI
-                Console.WriteLine($"Will redirect to: {context.Properties.RedirectUri}");
+                // Try to get the token with user_impersonation scope
+                var token = await tokenAcquisition.GetAccessTokenForUserAsync(
+                    new[] { "https://management.azure.com/user_impersonation" },
+                    authenticationScheme: OpenIdConnectDefaults.AuthenticationScheme);
+                
+                // Store the token for forwarding to the backend
+                context.Properties.Items["user_impersonation_token"] = token;
             }
-            return Task.CompletedTask;
+            catch (MicrosoftIdentityWebChallengeUserException)
+            {
+                // User hasn't consented to user_impersonation yet
+                context.Properties.Items["needs_user_impersonation"] = "true";
+            }
         }
     };
 })
@@ -164,6 +173,8 @@ app.Use(async (context, next) =>
     }
 });
 
+// Add the middleware before UseAuthentication
+app.UseMiddleware<TokenForwardingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

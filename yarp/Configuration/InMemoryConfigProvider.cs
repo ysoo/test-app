@@ -78,7 +78,7 @@ namespace YarpK8sProxy.Configuration
             };
 
             _config = new ProxyConfig(routes, clusters);
-            _logger.LogInformation("Proxy configuration initialized with routes: /, /test, and /public/test");
+            _logger.LogInformation("Proxy configuration initialized with routes: /, /public, and /private");
         }
 
         public IProxyConfig GetConfig() => _config;
