@@ -18,19 +18,20 @@ namespace YarpK8sProxy.Configuration
             {
                 new RouteConfig
                 {
-                    RouteId = "test-route",
+                    RouteId = "private-test-route",
                     ClusterId = "test-cluster",
                     Match = new RouteMatch
                     {
-                        Path = "/test"
+                        Path = "/private"
                     },
                     Transforms = new[]
                     {
                         new Dictionary<string, string>
                         {
-                            { "PathRemovePrefix", "/test" }
+                            { "PathRemovePrefix", "/private" }
                         }
-                    }
+                    },
+                    AuthorizationPolicy = "authenticated"
                 },
                 new RouteConfig
                 {
@@ -38,13 +39,13 @@ namespace YarpK8sProxy.Configuration
                     ClusterId = "test-cluster",
                     Match = new RouteMatch
                     {
-                        Path = "/public/test"
+                        Path = "/public"
                     },
                     Transforms = new[]
                     {
                         new Dictionary<string, string>
                         {
-                            { "PathRemovePrefix", "/public/test" }
+                            { "PathRemovePrefix", "/public" }
                         }
                     }
                 },
