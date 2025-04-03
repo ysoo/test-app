@@ -55,15 +55,64 @@ builder.Services.AddAuthentication(options =>
 .AddMicrosoftIdentityWebApp(options =>
 {
     builder.Configuration.GetSection("AzureAd").Bind(options);
+    options.Scope.Add("https://management.azure.com/user_impersonation");
     options.Events = new OpenIdConnectEvents
     {
-        OnAuthenticationFailed = context =>
+        OnRedirectToIdentityProvider = context =>
         {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogError("Authentication failed: {Error}", context.Exception.Message);
+            // Check if we're requesting consent explicitly
+            if (context.Properties.Items.ContainsKey(OpenIdConnectDefaults.RedirectUriForCodePropertiesKey))
+            {
+                // Add prompt=consent only when explicitly requested
+                context.ProtocolMessage.Prompt = "consent";
+            }
+            return Task.CompletedTask;
+        },
+       OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+            context.HandleResponse();
+            return Task.CompletedTask;
+        },
+        // Handle token validation errors
+        OnRemoteFailure = context =>
+        {
+            Console.WriteLine($"Remote authentication failure: {context.Failure?.Message}");
+            
+            // Check if this is a consent error
+            if (context.Failure?.Message?.Contains("AADSTS65001") == true || 
+                context.Failure?.Message?.Contains("consent") == true)
+            {
+                // Redirect to a page that explains consent is required
+                context.Response.Redirect("/Home/ConsentRequired");
+                context.HandleResponse();
+            }
+            
+            return Task.CompletedTask;
+        },
+        // This is the important part - handle post-authentication redirect
+        OnTokenValidated = context =>
+        {
+            // If we have a redirect stored, use it
+            if (context.Properties.RedirectUri != null && 
+                !context.Properties.RedirectUri.EndsWith("/signin-oidc"))
+            {
+                // Keep the redirect URI
+                Console.WriteLine($"Will redirect to: {context.Properties.RedirectUri}");
+            }
             return Task.CompletedTask;
         }
     };
+})
+.EnableTokenAcquisitionToCallDownstreamApi()
+.AddInMemoryTokenCaches();
+
+builder.Services.Configure<MicrosoftIdentityOptions>(options =>
+{
+    options.ResponseType = "code";
+    // Force HTTPS for the redirect URI
+    options.Instance = "https://login.microsoftonline.com/";
+    options.CallbackPath = "/signin-oidc";
 });
 
 // Register our provider
@@ -80,6 +129,9 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+// Add HTTPS redirection before other middleware
+app.UseHttpsRedirection();
 
 // Add logging middleware
 app.Use(async (context, next) =>

@@ -14,7 +14,7 @@ kind: Deployment
 metadata:
   name: test-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: test-app
